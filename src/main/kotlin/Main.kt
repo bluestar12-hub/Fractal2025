@@ -46,8 +46,6 @@ fun main(): Unit = application {
     student1Print()
 }
 
-// пробный коммит
-
 
 private fun student2Print() {
     val x = 7
