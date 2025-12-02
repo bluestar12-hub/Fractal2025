@@ -1,21 +1,35 @@
+package app
+
+import androidx.compose.runtime.Composable
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.material.Button
+import androidx.compose.material.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import app.ui.PaintPanel
 import app.ui.SelectionPanel
 import app.viewmodels.MainViewModel
-import kotlin.math.pow
 
 @Composable
 @Preview
-fun App(viewModel: MainViewModel= MainViewModel()) {
+fun App(viewModel: MainViewModel = MainViewModel()) {
     MaterialTheme {
-        Box {
+        Box(modifier = Modifier.fillMaxSize()) {
             PaintPanel(
                 Modifier.fillMaxSize(),
                 onImageUpdate = {
@@ -32,7 +46,115 @@ fun App(viewModel: MainViewModel= MainViewModel()) {
                 viewModel::onStopSelecting,
                 viewModel::onSelecting,
             )
+
+            // Панель управления
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(20.dp)
+            ) {
+                ControlPanel(viewModel)
+            }
+
+            // Информационная панель
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(20.dp)
+            ) {
+                InfoPanel(viewModel)
+            }
         }
+    }
+}
+
+@Composable
+fun ControlPanel(viewModel: MainViewModel) {
+    Column(
+        modifier = Modifier
+            .background(Color.Black.copy(0.7f), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Text("Фрактал:", color = Color.White, fontSize = 14.sp)
+        Row {
+            Button(
+                onClick = { viewModel.setMandelbrot() },
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Text("М")
+            }
+            Button(
+                onClick = { viewModel.setJulia() },
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Text("Ж")
+            }
+            Button(
+                onClick = { viewModel.setBurningShip() },
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Text("К")
+            }
+            Button(
+                onClick = { viewModel.setTricorn() }
+            ) {
+                Text("Т")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text("Цвета:", color = Color.White, fontSize = 14.sp)
+        Row {
+            Button(
+                onClick = { viewModel.setStandardColors() },
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Text("Ст")
+            }
+            Button(
+                onClick = { viewModel.setFireColors() },
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Text("Ог")
+            }
+            Button(
+                onClick = { viewModel.setRainbowColors() },
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Text("Рд")
+            }
+            Button(
+                onClick = { viewModel.setCosmicColors() }
+            ) {
+                Text("Кс")
+            }
+        }
+    }
+}
+
+@Composable
+fun InfoPanel(viewModel: MainViewModel) {
+    Column(
+        modifier = Modifier
+            .background(Color.Black.copy(0.7f), RoundedCornerShape(12.dp))
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Фрактал: ${viewModel.currentFractalName}",
+            color = Color.White,
+            fontSize = 14.sp
+        )
+        Text(
+            text = "Цвета: ${viewModel.currentColorSchemeName}",
+            color = Color.White,
+            fontSize = 14.sp
+        )
+        Text(
+            text = "Итераций: ${app.fractal.IterationsCalculator.getMaxIterations(viewModel.currentPlain)}",
+            color = Color.White,
+            fontSize = 14.sp
+        )
     }
 }
 
@@ -43,63 +165,7 @@ fun main(): Unit = application {
     ) {
         App()
     }
-    student2Print()
-    student1Print()
-    student3Print()
-    student5Print()
-    student6Print()
-    student8Print()
-    student9Print()
-}
 
-// пробный коммит
-
-
-private fun student2Print() {
-    val x = 7
-    val y = 8
-    val product = x * y
-    println("Student 2: $x * $y = $product")
 }
 
 
-private fun student9Print() {
-    val randomNum = (1..100).random()
-    println("Student 9: Random number between 1 and 100: $randomNum")
-}
-
-
-
-private fun student1Print() {
-    val a = 5
-    val b = 3
-    val sum = a + b
-    println("Student 1: $a + $b = $sum")
-}
-
-private fun student3Print() {
-    val a = 15
-    val b = 4
-    val difference = a - b
-    println("Student 3: $a - $b = $difference")
-}
-
-private fun student5Print() {
-    val base = 2
-    val exponent = 5
-    val power = base.toDouble().pow(exponent.toDouble()).toInt()
-    println("Student 5: $base^$exponent = $power")
-//привет привет :)
-}
-
-private fun student6Print() {
-    val dividend = 17
-    val divisor = 5
-    val remainder = dividend % divisor
-    println("Student 6: $dividend % $divisor = $remainder")
-}
-
-private fun student8Print() {
-    val pi = Math.PI
-    println("Student 8: PI = ${"%.4f".format(pi)}")
-}
