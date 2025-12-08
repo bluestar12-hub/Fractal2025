@@ -118,7 +118,7 @@ fun main() = application {
                         val coordsText = remember(globalMousePosition, viewModel.currentPlain) {
                             val pos = globalMousePosition
                             val plain = viewModel.currentPlain
-                            if (pos != null && plain != null) {
+                            if (pos != null) {
                                 try {
                                     val x = Converter.xScr2Crt(pos.x, plain)
                                     val y = Converter.yScr2Crt(pos.y, plain)
