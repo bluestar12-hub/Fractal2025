@@ -22,13 +22,6 @@ class MainViewModelFractalChangeTestTest {
         assertEquals("Жюлиа", vm.currentFractalName)
     }
 
-//    @Test
-//    fun `setBurningShip updates fractal name`() {
-//        val vm = MainViewModel()
-//        vm.setBurningShip()
-//        assertEquals("Горящий корабль", vm.currentFractalName)
-//    }
-
     @Test
     fun `setTricorn updates fractal name`() {
         val vm = MainViewModel()

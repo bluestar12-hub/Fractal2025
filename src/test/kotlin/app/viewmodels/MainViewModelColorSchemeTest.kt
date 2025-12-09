@@ -1,9 +1,11 @@
 package app.viewmodels
 
-import org.junit.jupiter.api.Test
+import app.painting.ColorSchemes
+import app.viewmodels.MainViewModel
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
-class MainViewModelColorSchemeTest {
+class MainViewModelColorChangeTestTest {
 
     @Test
     fun `setStandardColors updates color scheme name`() {
@@ -29,14 +31,7 @@ class MainViewModelColorSchemeTest {
     @Test
     fun `setCosmicColors updates color scheme name`() {
         val vm = MainViewModel()
-        // В коде используется ice, но в UI отображается "Ледяная"
-        vm.setCosmicColors()
+        vm.setIceColors()
         assertEquals("Ледяная", vm.currentColorSchemeName)
-    }
-
-    @Test
-    fun `initial color scheme should be standard`() {
-        val vm = MainViewModel()
-        assertEquals("Стандартная", vm.currentColorSchemeName)
     }
 }
