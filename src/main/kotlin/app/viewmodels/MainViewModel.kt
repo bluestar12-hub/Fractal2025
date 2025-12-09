@@ -16,8 +16,16 @@ import app.painting.ColorSchemes
 import app.fractal.IterationsCalculator
 import app.mouse.ClipboardService
 import app.history.UndoManager
+import app.tour.FractalTour
+import app.tour.TourFrame
 import app.utils.ExporterJPG
 import app.utils.SoundPlayer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlin.math.exp
+import kotlin.math.ln
 
 class MainViewModel {
     var fractalImage by mutableStateOf(ImageBitmap(0, 0))
@@ -56,7 +64,7 @@ class MainViewModel {
     var zoomText by mutableStateOf("1x")
 
 
-    private var fractalPainter by mutableStateOf(
+    var fractalPainter by mutableStateOf(
         FractalPainter(
             plain,
             FractalFunctions.mandelbrot,
@@ -83,6 +91,155 @@ class MainViewModel {
 
             return Pair(Offset(x, y), Size(width, height))
         }
+
+    var currentTour: FractalTour? = null
+    private var tourJob: Job? = null
+    var isTourRunning by mutableStateOf(false)
+    private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    var isRecordingTour by mutableStateOf(false)
+    var currentTourFrames by mutableStateOf<List<TourFrame>>(emptyList())
+    var tourName by mutableStateOf("Моя экскурсия")
+
+
+    fun startTour(tour: FractalTour) {
+        if (isTourRunning) return
+        isTourRunning = true
+        tourJob = viewModelScope.launch {
+            try {
+                val frames = tour.frames
+                if (frames.isEmpty()) return@launch
+
+                while (true) {
+                    for (i in 0 until frames.size) {
+                        val frameStart = frames[i]
+                        val frameEnd = frames[(i + 1) % frames.size]
+
+                        // Save state *before* animating (so user can undo tour start)
+                        if (i == 0) saveCurrentState()
+
+                        animateBetween(frameStart.plain, frameEnd.plain, frameStart.durationMs)
+
+                        // Switch fractal/color mid-tour?
+                        if (frameEnd.fractalName != currentFractalName) {
+                            setFractalByName(frameEnd.fractalName)
+                        }
+                        if (frameEnd.colorSchemeName != currentColorSchemeName) {
+                            setColorSchemeByName(frameEnd.colorSchemeName)
+                        }
+
+                        // Early exit if tour stopped
+                        if (!isTourRunning) break
+                    }
+                    if (!tour.loop) break
+                }
+            } finally {
+                isTourRunning = false
+            }
+        }
+    }
+
+    fun startTourRecording() {
+        isRecordingTour = true
+        currentTourFrames = emptyList()
+    }
+
+    fun stopTourRecording() {
+        isRecordingTour = false
+    }
+
+    fun saveAndStartTour() {
+        if (currentTourFrames.size < 2) return // минимум 2 кадра
+        currentTour = FractalTour(
+            name = tourName.ifBlank { "Экскурсия ${System.currentTimeMillis()}" },
+            frames = currentTourFrames,
+            loop = false
+        )
+        isRecordingTour = false
+        startTour(currentTour!!)
+    }
+
+    private fun setFractalByName(name: String) {
+        when (name) {
+            "Мандельброт" -> setMandelbrot()
+            "Жюлиа" -> setJulia()
+            "Трикорн" -> setTricorn()
+            "Кубический" -> setCubicMandelbrot() // add if supported
+        }
+    }
+
+    private fun setColorSchemeByName(name: String) {
+        when (name) {
+            "Стандартная" -> setStandardColors()
+            "Огненная" -> setFireColors()
+            "Радужная" -> setRainbowColors()
+            "Ледяная" -> setIceColors()
+        }
+    }
+
+    private fun setCubicMandelbrot() {
+        resetPanFlag()
+        saveCurrentState()
+        fractalPainter = fractalPainter.withFractal(FractalFunctions.cubicMandelbrot)
+        currentFractalName = "Кубический"
+        mustRepaint = true
+    }
+
+    fun stopTour() {
+        isTourRunning = false
+        tourJob?.cancel()
+        tourJob = null
+    }
+
+    private suspend fun animateBetween(
+        startPlain: Plain,
+        endPlain: Plain,
+        durationMs: Long
+    ) {
+        val t0 = startPlain
+        val t1 = endPlain
+
+        val cx0 = (t0.xMin + t0.xMax) / 2
+        val cy0 = (t0.yMin + t0.yMax) / 2
+        val s0 = 3.0 / (t0.xMax - t0.xMin)
+
+        val cx1 = (t1.xMin + t1.xMax) / 2
+        val cy1 = (t1.yMin + t1.yMax) / 2
+        val s1 = 3.0 / (t1.xMax - t1.xMin)
+
+        val logS0 = ln(s0)
+        val logS1 = ln(s1)
+
+        val steps = (durationMs / 16).coerceAtLeast(2) // ~60 FPS
+        val dt = 1.0 / steps
+
+        for (i in 0..steps.toInt()) {
+            if (!isTourRunning) break
+
+            val alpha = (i * dt).coerceIn(0.0, 1.0)
+            val cx = lerp(cx0, cx1, alpha)
+            val cy = lerp(cy0, cy1, alpha)
+            val s = exp(lerp(logS0, logS1, alpha))
+
+            // Adjust for *current* screen aspect
+            val aspect = plain.width / plain.height
+            val width = 3.0 / s
+            val height = width / aspect
+
+            plain.xMin = cx - width / 2
+            plain.xMax = cx + width / 2
+            plain.yMin = cy - height / 2
+            plain.yMax = cy + height / 2
+
+            updateZoomLevel()
+            mustRepaint = true
+
+            // Redraw next frame
+            delay(16) // ~60 FPS
+        }
+    }
+
+    // Helper
+    private fun lerp(a: Double, b: Double, t: Double) = a + (b - a) * t
 
     init {
         saveCurrentState()
