@@ -21,7 +21,7 @@ class MainViewModelIntegrationTest {
         assertEquals("Огненная", vm.currentColorSchemeName)
 
         vm.undo()
-        assertEquals("Жюлиа", vm.currentFractalName)
+        assertEquals("Мандельброт", vm.currentFractalName)
         assertEquals("Стандартная", vm.currentColorSchemeName)
 
         vm.undo()
@@ -29,12 +29,12 @@ class MainViewModelIntegrationTest {
         assertEquals("Стандартная", vm.currentColorSchemeName)
 
         vm.redo()
-        assertEquals("Жюлиа", vm.currentFractalName)
+        assertEquals("Мандельброт", vm.currentFractalName)
         assertEquals("Стандартная", vm.currentColorSchemeName)
 
         vm.redo()
         assertEquals("Жюлиа", vm.currentFractalName)
-        assertEquals("Огненная", vm.currentColorSchemeName)
+        assertEquals("Стандартная", vm.currentColorSchemeName)
 
         vm.resetToInitial()
         assertEquals("Мандельброт", vm.currentFractalName)
